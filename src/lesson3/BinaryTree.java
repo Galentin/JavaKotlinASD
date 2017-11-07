@@ -22,6 +22,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     }
 
     private Node<T> root = null;
+    Node<T> parent = null;
 
     private int size = 0;
 
@@ -44,7 +45,8 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             assert closest.right == null;
             closest.right = newNode;
         }
-        size++;
+        size ++;
+
         return true;
     }
 
@@ -60,8 +62,61 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     }
 
     @Override
-    public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
+    public boolean remove( Object o) {
+        if(contains(o)){
+            Node<T> node = new Node<T>((T) o);
+            if(root.value == node.value && root.right == null && root.left == null) root = null;
+            else if(root.value == node.value && root.left != null && root.right == null) root = root.left;
+            else if(root.value == node.value  && root.left == null && root.right != null) root = root.right;
+            else remove(root, node);
+            size --;
+        }
+        return false;
+    }
+
+    public void remove(Node elements, Node node){
+        int comparison = ((T) elements.value).compareTo((T)node.value);
+        if(comparison != 0) {
+            parent = elements;
+            if(comparison > 0) remove(elements.left, node);
+            else remove(elements.right, node);
+        }
+        else{
+            if(elements.left == null && elements.right == null){
+                if(elements == parent.right) parent.right = null;
+                else parent.left = null;
+            }
+            else if(elements.left == null && elements.right != null){
+                if(elements == parent.right) parent.right = elements.right;
+                else parent.left = elements.right;
+            }
+            else if(elements.left != null && elements.right == null){
+                if(elements == parent.right) parent.right = elements.left;
+                else parent.left = elements.left;
+            }
+            else if(elements.left != null && elements.right != null){
+                if(elements.right.left == null){
+                    if(elements == root) root = elements.right;
+                    else if(elements == parent.right) parent.right = elements.right;
+                    else parent.left = elements.right;
+                    elements.right.left = elements.left;
+                    elements.right = elements.right.right;
+                }else{
+                    Node m = searchRemove(elements.right);
+                    if(elements == root) root = m.left;
+                    else if(elements == parent.right) parent.right = m.left;
+                    else parent.left = m.left;
+                    m.left.left = elements.left;
+                    m.left.right = elements.right;
+                    m.left = null;
+                }
+            }
+        }
+    }
+
+    private Node searchRemove(Node elements){
+        if(elements.left.left == null) return elements;
+        else return searchRemove(elements.left);
     }
 
     @Override
@@ -147,13 +202,36 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     @NotNull
     @Override
     public SortedSet<T> headSet(T toElement) {
-        throw new UnsupportedOperationException();
+        if(toElement == null) throw new IllegalArgumentException();
+        SortedSet<T> set = new TreeSet<>();
+        searchHead(root, toElement, set);
+        return set;
+    }
+
+    public void searchHead(Node node, T toElement, SortedSet<T> set){
+        if(node.left != null) searchHead(node.left, toElement, set);
+        if(((T)node.value).compareTo(toElement) < 0){
+            if(node.right != null) searchHead(node.right, toElement, set);
+            set.add((T) node.value);
+        }
     }
 
     @NotNull
     @Override
     public SortedSet<T> tailSet(T fromElement) {
-        throw new UnsupportedOperationException();
+        if(fromElement == null) throw new IllegalArgumentException();
+        SortedSet<T> set = new TreeSet<>();
+        searchTail(root, fromElement, set);
+        return set;
+    }
+
+    public void searchTail(Node node, T fromElement, SortedSet<T> set){
+        if(node.right != null) searchTail(node.right, fromElement, set);
+        int comparison = ((T)node.value).compareTo(fromElement);
+        if(comparison > 0 || comparison == 0){
+            if(node.left != null) searchTail(node.left, fromElement, set);
+            set.add((T) node.value);
+        }
     }
 
     @Override
