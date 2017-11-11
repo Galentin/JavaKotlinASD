@@ -70,6 +70,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             else if(root.value == node.value  && root.left == null && root.right != null) root = root.right;
             else remove(root, node);
             size --;
+            return true;
         }
         return false;
     }
@@ -150,11 +151,28 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     public class BinaryTreeIterator implements Iterator<T> {
 
         private Node<T> current = null;
+        private Stack<Node<T>> stack = new Stack<>();
+        private Node<T> node = root;
+        private Node<T> result;
 
-        private BinaryTreeIterator() {}
+        private BinaryTreeIterator() {
+            while (node != null){
+                stack.push(node);
+                node = node.left;
+            }
+        }
 
         private Node<T> findNext() {
-            throw new UnsupportedOperationException();
+            if(stack.empty()) return null;
+            result = stack.pop();
+            if(result.right != null){
+                Node<T> node1 = result.right;
+                while(node1 != null){
+                    stack.push(node1);
+                    node1 = node1.left;
+                }
+            }
+            return result;
         }
 
         @Override
